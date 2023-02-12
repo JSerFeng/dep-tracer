@@ -3,12 +3,12 @@
 This is a tiny tool to find a installed dependency location in your project.
 
 Imagine you are working in a framework like Next.js or Modern.js, maybe you want to debug into the `ts-loader` or `babel-loader` under that framework, and you are using pnpm workspace, it would be hard to find the package location, like `~/my-app/node_modules/.pnpm/picocolors@1.0.0/node_modules/picocolors`.
-So you can use this little tool to help you, just type `dep-trace picocolors` at your project root, or you can be more accurate, ` dep-trace next postcss picocolors`,
+So you can use this little tool to help you, just type `dep-tracer picocolors` at your project root, or you can be more accurate, ` dep-tracer next postcss picocolors`,
 
 ## Usage
 
 ```bash
-dep-trace next postcss picocolors  
+dep-tracer next postcss picocolors  
 
 # output like
 Found:

@@ -1,10 +1,10 @@
 {
-  "name": "dep-trace",
+  "name": "dep-tracer",
   "version": "1.0.0",
   "description": "",
   "main": "./dist/index.js",
   "bin": {
-    "dep-trace": "./dist/index.js",
+    "dep-tracer": "./dist/index.js",
     "dt": "./dist/index.js"
   },
   "files": [
