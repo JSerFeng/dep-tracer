@@ -1,0 +1,25 @@
+{
+  "name": "dep-trace",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "bin": {
+    "dep-trace": "./dist/index.js",
+    "dt": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "jserfeng",
+  "license": "MIT",
+  "dependencies": {
+    "enhanced-resolve": "^5.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.13.0"
+  }
+}
