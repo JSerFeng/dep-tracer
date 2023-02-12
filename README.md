@@ -1,4 +1,4 @@
-# Dep Trace
+# Dep Tracer
 
 This is a tiny tool to find a installed dependency location in your project.
 
