@@ -128,7 +128,7 @@ export async function dfs(
   }
   memo.add(pkgJson.context);
 
-  if (pkgJson.name == target) {
+  if (!tips.length && pkgJson.name == target) {
     return [[{ location: pkgJson.context, chain: [] }], true];
   }
 
@@ -196,6 +196,9 @@ export async function dfs(
 async function main() {
   const startTime = Date.now();
   const args = process.argv.slice(2);
+
+  console.log("Start scanning ...");
+
   const result = await find(process.cwd(), args);
 
   if (!result.length) {
