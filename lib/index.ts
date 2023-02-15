@@ -17,6 +17,7 @@ interface Result {
 interface PackageJsonInner {
   name: string;
   dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
 }
 
 interface PackageJson extends PackageJsonInner {
@@ -109,7 +110,7 @@ export async function find(
   let pkg: PackageJson | undefined;
   if ((pkg = await resolve(resolver, context, "."))) {
     const memo = new Set<string>();
-    return (await dfs(resolver, pkg, target, tips, memo, 0))[0];
+    return (await dfs(resolver, pkg, target, tips, memo, 0, true))[0];
   } else {
     return [];
   }
@@ -121,7 +122,8 @@ export async function dfs(
   target: string,
   tips: string[],
   memo: Set<string>,
-  depth: number
+  depth: number,
+  isEntry: boolean // TODO api ugly
 ): Promise<[Result[], boolean]> {
   if (memo.has(pkgJson.context) || depth > MAX_SCAN_DEPTH) {
     return [[], false];
@@ -134,63 +136,65 @@ export async function dfs(
 
   const currSearch = tips[tips.length - 1] || target;
 
-  let deps: Record<string, string> | undefined;
-  if ((deps = pkgJson.dependencies)) {
-    if (currSearch in deps) {
-      const pkg = await resolve(resolver, pkgJson.context, currSearch);
+  let deps: Record<string, string> = {
+    ...(pkgJson.dependencies || {}),
+    ...(isEntry ? pkgJson.devDependencies || {} : {}),
+  };
 
-      if (!pkg) {
-        return [[], true];
-      }
+  if (currSearch in deps) {
+    const pkg = await resolve(resolver, pkgJson.context, currSearch);
 
-      const results = await dfs(
-        resolver,
-        pkg,
-        target,
-        tips.slice(0, tips.length - 1),
-        memo,
-        0
-      );
+    if (!pkg) {
+      return [[], true];
+    }
 
-      for (const result of results[0]) {
-        result.chain.push(pkg.name);
-      }
+    const results = await dfs(
+      resolver,
+      pkg,
+      target,
+      tips.slice(0, tips.length - 1),
+      memo,
+      0,
+      false
+    );
 
-      return results;
-    } else {
-      let invalid = false;
-      const res: Result[] = [];
+    for (const result of results[0]) {
+      result.chain.push(pkg.name);
+    }
 
-      for (const dep of Reflect.ownKeys(deps) as string[]) {
-        const pkg = await resolve(resolver, pkgJson.context, dep);
-        if (pkg) {
-          const [dfsResult, _invalid] = await dfs(
-            resolver,
-            pkg,
-            target,
-            tips,
-            memo,
-            depth + 1
-          );
+    return results;
+  } else {
+    let invalid = false;
+    const res: Result[] = [];
 
-          for (const result of dfsResult) {
-            result.chain.push(pkg.name);
-          }
+    for (const dep of Reflect.ownKeys(deps) as string[]) {
+      const pkg = await resolve(resolver, pkgJson.context, dep);
+      if (pkg) {
+        const [dfsResult, _invalid] = await dfs(
+          resolver,
+          pkg,
+          target,
+          tips,
+          memo,
+          depth + 1,
+          false
+        );
 
-          res.push(...dfsResult);
+        for (const result of dfsResult) {
+          result.chain.push(pkg.name);
+        }
 
-          invalid = _invalid;
-          if (invalid) {
-            break;
-          }
+        res.push(...dfsResult);
+
+        invalid = _invalid;
+        if (invalid) {
+          break;
         }
       }
-
-      return [res, invalid];
     }
-  }
 
-  return [[], false];
+    return [res, invalid];
+  }
 }
 
 async function main() {
