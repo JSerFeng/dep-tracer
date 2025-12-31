@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "rstest"
   },
   "keywords": [],
   "author": "jserfeng",
@@ -21,6 +22,7 @@
     "enhanced-resolve": "^5.12.0"
   },
   "devDependencies": {
-    "@types/node": "^18.13.0"
+    "@types/node": "^18.13.0",
+    "@rstest/core": "latest"
   }
 }
