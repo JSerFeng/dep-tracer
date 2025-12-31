@@ -7,13 +7,12 @@ import {
   CachedInputFileSystem,
 } from "enhanced-resolve";
 
-const MAX_SCAN_DEPTH = 5;
+let MAX_SCAN_DEPTH = 5;
 
 interface Result {
   location: string;
   chain: string[];
 }
-
 interface PackageJsonInner {
   name: string;
   dependencies?: Record<string, string>;
@@ -116,6 +115,16 @@ export async function find(
   }
 }
 
+function inDependencies(query: string, deps: Record<string, string>): false | string {
+  for (const dep of Reflect.ownKeys(deps)) {
+    if (new RegExp(query).test(dep as string)) {
+      return dep as string;
+    }
+  }
+
+  return false;
+}
+
 export async function dfs(
   resolver: Resolver,
   pkgJson: PackageJson,
@@ -141,8 +150,9 @@ export async function dfs(
     ...(isEntry ? pkgJson.devDependencies || {} : {}),
   };
 
-  if (currSearch in deps) {
-    const pkg = await resolve(resolver, pkgJson.context, currSearch);
+  let dep;
+  if (dep = inDependencies(currSearch, deps)) {
+    const pkg = await resolve(resolver, pkgJson.context, dep);
 
     if (!pkg) {
       return [[], true];
@@ -167,6 +177,29 @@ export async function dfs(
     let invalid = false;
     const res: Result[] = [];
 
+    const pkg = await resolve(resolver, pkgJson.context, currSearch);
+    if (pkg) {
+      const [dfsResult, _invalid] = await dfs(
+        resolver,
+        pkg,
+        target,
+        tips.slice(0, tips.length - 1),
+        memo,
+        0,
+        false
+      );
+
+      for (const result of dfsResult) {
+        result.chain.push(pkg.name);
+      }
+
+      res.push(...dfsResult);
+
+      if (_invalid) {
+        invalid = true;
+      }
+    }
+
     for (const dep of Reflect.ownKeys(deps) as string[]) {
       const pkg = await resolve(resolver, pkgJson.context, dep);
       if (pkg) {
@@ -186,8 +219,8 @@ export async function dfs(
 
         res.push(...dfsResult);
 
-        invalid = _invalid;
-        if (invalid) {
+        if (_invalid) {
+          invalid = true;
           break;
         }
       }
@@ -197,9 +230,40 @@ export async function dfs(
   }
 }
 
+const OPT_RE = /--(\w+)(?:\s*=\s*(\w*))?/;
+function processArgs(args: string[]): [Record<string, any>, string[]] {
+  const opt = {};
+
+  return [
+    opt,
+    args.filter((arg) => {
+      if (arg.startsWith("--")) {
+        const matched = arg.match(OPT_RE);
+        if (!matched || matched?.length < 2) {
+          // Invalid arg
+          console.warn(`Invalid arg ${arg}`);
+          return false;
+        }
+
+        const key = matched[1];
+        const value = matched[2];
+
+        // @ts-ignore
+        opt[key] = value;
+
+        return false;
+      } else {
+        return true;
+      }
+    }),
+  ];
+}
+
 async function main() {
   const startTime = Date.now();
-  const args = process.argv.slice(2);
+  const [options, args] = processArgs(process.argv.slice(2));
+
+  MAX_SCAN_DEPTH = options.depth ?? options.deep ?? MAX_SCAN_DEPTH;
 
   console.log("Start scanning ...");
 

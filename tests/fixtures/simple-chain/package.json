@@ -1,0 +1,6 @@
+{
+  "name": "root",
+  "dependencies": {
+    "pkg-a": "1.0.0"
+  }
+}

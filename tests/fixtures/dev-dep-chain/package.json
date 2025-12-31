@@ -1,0 +1,6 @@
+{
+  "name": "dev-dep-root",
+  "devDependencies": {
+    "pkg-a": "1.0.0"
+  }
+}
