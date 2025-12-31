@@ -102,7 +102,7 @@ export async function find(
   let context = entry;
   let resolver = ResolverFactory.createResolver({
     preferRelative: true,
-    fileSystem: new CachedInputFileSystem(fs, 4000),
+    fileSystem: new CachedInputFileSystem(fs as any, 4000),
     useSyncFileSystemCalls: false,
   });
 
