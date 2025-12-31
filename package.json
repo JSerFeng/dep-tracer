@@ -13,7 +13,10 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "test": "rstest"
+    "test": "rstest",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "npm run build && changeset publish"
   },
   "keywords": [],
   "author": "jserfeng",
@@ -22,7 +25,8 @@
     "enhanced-resolve": "^5.12.0"
   },
   "devDependencies": {
-    "@types/node": "^18.13.0",
-    "@rstest/core": "latest"
+    "@changesets/cli": "^2.29.8",
+    "@rstest/core": "latest",
+    "@types/node": "^18.13.0"
   }
 }
